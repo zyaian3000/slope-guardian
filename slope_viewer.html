@@ -24,25 +24,7 @@ header{background:linear-gradient(135deg,#1a2340 0%,#0d1525 100%);border-bottom:
 .loading-bar{width:200px;height:2px;background:#2a3550;border-radius:1px;overflow:hidden}
 .loading-bar-fill{height:100%;background:var(--wine);animation:loading 2s ease-in-out infinite}
 @keyframes loading{0%{width:0%;margin-left:0}50%{width:70%;margin-left:0}100%{width:0%;margin-left:100%}}
-/* 回転ボタン */
-.rotate-btn{
-  position:absolute;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:var(--wine);
-  color:var(--white);
-  border:none;
-  border-radius:24px;
-  padding:10px 24px;
-  font-size:13px;
-  font-weight:700;
-  letter-spacing:1px;
-  cursor:pointer;
-  z-index:20;
-  box-shadow:0 4px 16px rgba(0,0,0,0.4);
-  transition:background 0.2s;
-}
+.rotate-btn{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:var(--wine);color:var(--white);border:none;border-radius:24px;padding:10px 24px;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:background 0.2s}
 .rotate-btn:hover{background:#a02040}
 .rotate-btn.stopped{background:#2a3550}
 footer{background:#0d1525;border-top:1px solid #2a3550;padding:10px 20px;flex-shrink:0}
@@ -91,13 +73,15 @@ footer{background:#0d1525;border-top:1px solid #2a3550;padding:10px 20px;flex-sh
   </div>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
 <script>
 (function(){
   var overlay=document.getElementById('loadingOverlay');
   var canvas=document.getElementById('canvas');
   var btn=document.getElementById('rotateBtn');
   var autoRotating=true;
-  var rotateSpeed=0.005;
 
   var W=canvas.parentElement.clientWidth;
   var H=canvas.parentElement.clientHeight;
@@ -116,7 +100,20 @@ footer{background:#0d1525;border-top:1px solid #2a3550;padding:10px 20px;flex-sh
   dir.position.set(100,200,100);
   scene.add(dir);
 
-  // 回転ボタン
+  var controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  controls.dampingFactor=0.05;
+  controls.minPolarAngle=0;
+  controls.maxPolarAngle=Math.PI;
+  controls.enableZoom=true;
+  controls.enablePan=true;
+
+  controls.addEventListener('start',function(){
+    autoRotating=false;
+    btn.innerHTML='&#9654; 回転を再開する';
+    btn.classList.add('stopped');
+  });
+
   btn.addEventListener('click',function(){
     autoRotating=!autoRotating;
     if(autoRotating){
@@ -128,57 +125,36 @@ footer{background:#0d1525;border-top:1px solid #2a3550;padding:10px 20px;flex-sh
     }
   });
 
-  var script=document.createElement('script');
-  script.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-  script.onload=function(){
-    var controls=new THREE.OrbitControls(camera,renderer.domElement);
-    controls.enableDamping=true;
-    controls.dampingFactor=0.05;
-    controls.minPolarAngle=0;
-    controls.maxPolarAngle=Math.PI;
-    controls.enableZoom=true;
-    controls.enablePan=true;
+  var dracoLoader=new THREE.DRACOLoader();
+  dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
 
-    // ユーザー操作時は自動回転を止める
-    controls.addEventListener('start',function(){
-      autoRotating=false;
-      btn.innerHTML='&#9654; 回転を再開する';
-      btn.classList.add('stopped');
-    });
+  var loader=new THREE.GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
+  loader.load('./slope_001_small-v1.glb',function(gltf){
+    var model=gltf.scene;
+    var box=new THREE.Box3().setFromObject(model);
+    var center=box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+    scene.add(model);
+    var size=box.getSize(new THREE.Vector3()).length();
+    camera.position.set(0,size*0.5,size*1.2);
+    controls.target.set(0,0,0);
+    controls.update();
+    overlay.classList.add('hidden');
+  },null,function(err){
+    overlay.classList.add('hidden');
+    console.error(err);
+  });
 
-    var loaderScript=document.createElement('script');
-    loaderScript.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-    loaderScript.onload=function(){
-      var loader=new THREE.GLTFLoader();
-      loader.load('./slope_001_small-v1.glb',function(gltf){
-        var model=gltf.scene;
-        var box=new THREE.Box3().setFromObject(model);
-        var center=box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
-        scene.add(model);
-        var size=box.getSize(new THREE.Vector3()).length();
-        camera.position.set(0,size*0.5,size*1.2);
-        controls.target.set(0,0,0);
-        controls.update();
-        overlay.classList.add('hidden');
-      },null,function(err){
-        overlay.classList.add('hidden');
-        console.error(err);
-      });
-    };
-    document.head.appendChild(loaderScript);
-
-    function animate(){
-      requestAnimationFrame(animate);
-      if(autoRotating){
-        scene.rotation.y+=rotateSpeed;
-      }
-      controls.update();
-      renderer.render(scene,camera);
+  function animate(){
+    requestAnimationFrame(animate);
+    if(autoRotating){
+      scene.rotation.y+=0.005;
     }
-    animate();
-  };
-  document.head.appendChild(script);
+    controls.update();
+    renderer.render(scene,camera);
+  }
+  animate();
 
   window.addEventListener('resize',function(){
     var W2=canvas.parentElement.clientWidth;
