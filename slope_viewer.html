@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法面3Dモデル｜斜面診断 No.001</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Bebas+Neue&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --navy: #1a2340; --wine: #8b2035; --white: #ffffff; }
+  body { background: var(--navy); color: var(--white); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+  header { background: linear-gradient(135deg, #1a2340 0%, #0d1525 100%); border-bottom: 3px solid var(--wine); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 40px; height: 40px; background: var(--wine); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-main { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--white); line-height: 1; }
+  .logo-sub { font-size: 10px; color: #8899aa; letter-spacing: 1px; font-weight: 300; }
+  .case-badge { background: var(--wine); color: var(--white); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 2px; letter-spacing: 1px; }
+  .viewer-container { flex: 1; position: relative; }
+  model-viewer { width: 100%; height: calc(100vh - 110px); background: #1a2340; display: block; }
+  .loading-overlay { position: absolute; inset: 0; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 10; transition: opacity 0.5s; }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loading-icon { font-size: 48px; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.7} }
+  .loading-text { font-size: 14px; color: #8899aa; font-weight: 300; letter-spacing: 2px; }
+  .loading-bar { width: 200px; height: 2px; background: #2a3550; border-radius: 1px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; background: var(--wine); animation: loading 2s ease-in-out infinite; }
+  @keyframes loading { 0%{width:0%;margin-left:0}50%{width:70%;margin-left:0}100%{width:0%;margin-left:100%} }
+  footer { background: #0d1525; border-top: 1px solid #2a3550; padding: 10px 20px; flex-shrink: 0; }
+  .footer-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .footer-info { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .info-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8899aa; }
+  .info-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wine); flex-shrink: 0; }
+  .operate-hint { display: flex; gap: 16px; }
+  .op-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #8899aa; }
+  .op-key { background: #2a3550; border-radius: 3px; padding: 2px 6px; font-size: 10px; color: var(--white); }
+  @media(max-width:600px){.operate-hint{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">⛰</div>
+    <div class="logo-text">
+      <div class="logo-main">SLOPE GUARDIAN</div>
+      <div class="logo-sub">斜面診断システム｜3Dモデル確認</div>
+    </div>
+  </div>
+  <div class="case-badge">CASE No.001</div>
+</header>
+<div class="viewer-container">
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-icon">⛰</div>
+    <div class="loading-text">3Dモデルを読み込んでいます...</div>
+    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  </div>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <model-viewer
+    id="modelViewer"
+    src="./slope_001_small.glb"
+    alt="法面3Dモデル 斜面診断No.001"
+    camera-controls
+    auto-rotate
+    auto-rotate-delay="1000"
+    rotation-per-second="15deg"
+    environment-image="neutral"
+    shadow-intensity="1"
+  ></model-viewer>
+</div>
+<footer>
+  <div class="footer-content">
+    <div class="footer-info">
+      <div class="info-item"><div class="info-dot"></div><span>撮影：UAV空撮（フォトグラメトリ）</span></div>
+      <div class="info-item"><div class="info-dot"></div><span>処理：Agisoft Metashape</span></div>
+      <div class="info-item"><div class="info-dot"></div><span>株式会社アイビック</span></div>
+    </div>
+    <div class="operate-hint">
+      <div class="op-item"><span class="op-key">ドラッグ</span><span>回転</span></div>
+      <div class="op-item"><span class="op-key">ピンチ</span><span>拡大縮小</span></div>
+      <div class="op-item"><span class="op-key">2本指</span><span>移動</span></div>
+    </div>
+  </div>
+</footer>
+<script>
+  const viewer = document.getElementById('modelViewer');
+  const overlay = document.getElementById('loadingOverlay');
+  viewer.addEventListener('load', () => { overlay.classList.add('hidden'); });
+  viewer.addEventListener('error', () => { overlay.classList.add('hidden'); });
+  setTimeout(() => { overlay.classList.add('hidden'); }, 15000);
+</script>
+</body>
+</html>
